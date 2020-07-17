@@ -139,9 +139,19 @@ static const int SOURCE_GALLERY = 1;
                                delegate:nil
                       cancelButtonTitle:@"OK"
                       otherButtonTitles:nil] show];
-    self.result(nil);
-    self.result = nil;
-    _arguments = nil;
+      
+      @try {
+          
+          if(self.result != nil){
+                  self.result(nil);
+                     self.result = nil;
+                     _arguments = nil;
+        }
+          
+      } @catch (NSException *exception) {
+          
+      }
+   
   }
 }
 
@@ -205,15 +215,36 @@ static const int SOURCE_GALLERY = 1;
 - (void)errorNoCameraAccess:(AVAuthorizationStatus)status {
   switch (status) {
     case AVAuthorizationStatusRestricted:
-      self.result([FlutterError errorWithCode:@"camera_access_restricted"
-                                      message:@"The user is not allowed to use the camera."
-                                      details:nil]);
+          
+          @try {
+              
+              if(self.result != nil){
+                          self.result([FlutterError errorWithCode:@"camera_access_restricted"
+                                                               message:@"The user is not allowed to use the camera."
+                                                               details:nil]);
+                      }
+              
+          } @catch (NSException *exception) {
+              
+          }
+     
       break;
     case AVAuthorizationStatusDenied:
     default:
-      self.result([FlutterError errorWithCode:@"camera_access_denied"
-                                      message:@"The user did not allow camera access."
-                                      details:nil]);
+          
+          @try {
+              
+              if(self.result != nil){
+                          self.result([FlutterError errorWithCode:@"camera_access_denied"
+                                                               message:@"The user did not allow camera access."
+                                                               details:nil]);
+                      }
+              
+          } @catch (NSException *exception) {
+              
+          }
+        
+     
       break;
   }
 }
@@ -221,15 +252,34 @@ static const int SOURCE_GALLERY = 1;
 - (void)errorNoPhotoAccess:(PHAuthorizationStatus)status {
   switch (status) {
     case PHAuthorizationStatusRestricted:
-      self.result([FlutterError errorWithCode:@"photo_access_restricted"
-                                      message:@"The user is not allowed to use the photo."
-                                      details:nil]);
+          
+          @try {
+              
+              if(self.result != nil){
+                  self.result([FlutterError errorWithCode:@"photo_access_restricted"
+                                                                   message:@"The user is not allowed to use the photo."
+                                                                   details:nil]);
+              }
+          } @catch (NSException *exception) {
+              
+          }
+          
       break;
     case PHAuthorizationStatusDenied:
     default:
-      self.result([FlutterError errorWithCode:@"photo_access_denied"
-                                      message:@"The user did not allow photo access."
-                                      details:nil]);
+          
+          @try {
+              
+              if(self.result != nil){
+                           self.result([FlutterError errorWithCode:@"photo_access_denied"
+                                                                message:@"The user did not allow photo access."
+                                                                details:nil]);
+                       }
+          } @catch (NSException *exception) {
+              
+          }
+         
+     
       break;
   }
 }
@@ -263,10 +313,22 @@ static const int SOURCE_GALLERY = 1;
           [[NSFileManager defaultManager] copyItemAtURL:videoURL toURL:destination error:&error];
 
           if (error) {
-            self.result([FlutterError errorWithCode:@"flutter_image_picker_copy_video_error"
-                                            message:@"Could not cache the video file."
-                                            details:nil]);
-            self.result = nil;
+              
+              @try {
+                  
+                  if(self.result != nil){
+                                   
+                                   self.result([FlutterError errorWithCode:@"flutter_image_picker_copy_video_error"
+                                                                              message:@"Could not cache the video file."
+                                                                              details:nil]);
+                                              self.result = nil;
+                               }
+                  
+              } @catch (NSException *exception) {
+                  
+              }
+             
+           
             return;
           }
         }
@@ -323,9 +385,19 @@ static const int SOURCE_GALLERY = 1;
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker {
   [_imagePickerController dismissViewControllerAnimated:YES completion:nil];
-  self.result(nil);
+    
+    @try {
+        
+        if(self.result != nil){
+               self.result(nil);
 
-  self.result = nil;
+                self.result = nil;
+           }
+    } @catch (NSException *exception) {
+        
+    }
+   
+ 
   _arguments = nil;
 }
 
@@ -354,11 +426,31 @@ static const int SOURCE_GALLERY = 1;
 
 - (void)handleSavedPath:(NSString *)path {
   if (path) {
-    self.result(path);
+      
+      @try {
+          
+          if(self.result != nil){
+                    self.result(path);
+              }
+          
+      } @catch (NSException *exception) {
+          
+      }
+    
+  
   } else {
-    self.result([FlutterError errorWithCode:@"create_error"
-                                    message:@"Temporary file could not be created"
-                                    details:nil]);
+      
+      @try {
+          
+          if(self.result != nil){
+                   self.result([FlutterError errorWithCode:@"create_error"
+                                                     message:@"Temporary file could not be created"
+                                                     details:nil]);
+               }
+          
+      } @catch (NSException *exception) {
+        
+      }
   }
   self.result = nil;
 }
