@@ -297,10 +297,6 @@ static const int SOURCE_GALLERY = 1;
         
         NSURL *videoURL = [info objectForKey:UIImagePickerControllerMediaURL];
         
-        if(videoURL == nil){
-                  
-            videoURL = [info objectForKey:UIImagePickerControllerReferenceURL];
-        }
         NSString *mediaType = [info objectForKey:UIImagePickerControllerMediaType];
           
         AVAsset *asset = [AVURLAsset URLAssetWithURL:videoURL options:info];
