@@ -314,16 +314,15 @@ static const int SOURCE_GALLERY = 1;
           return;
         }
         if (videoURL != nil || hasVideoTrack || [mediaType isEqualToString:@"public.movie"]) {
+            
+            if(videoURL == nil){
+                                       
+                                          self.result([FlutterError errorWithCode:@"flutter_image_picker_copy_video_error"
+                                          message:@"video format error"
+                                          details:nil]);
+                                          return;
+            }
           if (@available(iOS 13.0, *)) {
-              
-              
-                           if(videoURL == nil){
-                            
-                               self.result([FlutterError errorWithCode:@"flutter_image_picker_copy_video_error"
-                               message:@"video format error"
-                               details:nil]);
-                               return;
-                           }
               
             NSString *fileName = [videoURL lastPathComponent];
             NSURL *destination =
