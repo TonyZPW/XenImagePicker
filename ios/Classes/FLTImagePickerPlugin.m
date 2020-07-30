@@ -316,7 +316,14 @@ static const int SOURCE_GALLERY = 1;
         if (videoURL != nil || hasVideoTrack || [mediaType isEqualToString:@"public.movie"]) {
           if (@available(iOS 13.0, *)) {
               
-              if(videoURL == nil)return;
+              
+                           if(videoURL == nil){
+                            
+                               self.result([FlutterError errorWithCode:@"flutter_image_picker_copy_video_error"
+                               message:@"video format error"
+                               details:nil]);
+                               return;
+                           }
               
             NSString *fileName = [videoURL lastPathComponent];
             NSURL *destination =
