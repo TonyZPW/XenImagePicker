@@ -292,95 +292,127 @@ static const int SOURCE_GALLERY = 1;
 
 - (void)imagePickerController:(UIImagePickerController *)picker
     didFinishPickingMediaWithInfo:(NSDictionary<NSString *, id> *)info {
-  NSURL *videoURL = [info objectForKey:UIImagePickerControllerMediaURL];
-  [_imagePickerController dismissViewControllerAnimated:YES completion:nil];
-  // The method dismissViewControllerAnimated does not immediately prevent
-  // further didFinishPickingMediaWithInfo invocations. A nil check is necessary
-  // to prevent below code to be unwantly executed multiple times and cause a
-  // crash.
-  if (!self.result) {
-    return;
-  }
-  if (videoURL != nil) {
-    if (@available(iOS 13.0, *)) {
-      NSString *fileName = [videoURL lastPathComponent];
-      NSURL *destination =
-          [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:fileName]];
-
-      if ([[NSFileManager defaultManager] isReadableFileAtPath:[videoURL path]]) {
-        NSError *error;
-        if (![[videoURL path] isEqualToString:[destination path]]) {
-          [[NSFileManager defaultManager] copyItemAtURL:videoURL toURL:destination error:&error];
-
-          if (error) {
+    
+    @try {
+        
+        NSURL *videoURL = [info objectForKey:UIImagePickerControllerMediaURL];
+        
+        NSString *mediaType = [info objectForKey:UIImagePickerControllerMediaType];
+          
+        AVAsset *asset = [AVURLAsset URLAssetWithURL:videoURL options:info];
+        
+        NSArray *tracks = [asset tracksWithMediaType:AVMediaTypeVideo];
+          
+        BOOL hasVideoTrack = [tracks count] > 0;
+          
+        [_imagePickerController dismissViewControllerAnimated:YES completion:nil];
+        // The method dismissViewControllerAnimated does not immediately prevent
+        // further didFinishPickingMediaWithInfo invocations. A nil check is necessary
+        // to prevent below code to be unwantly executed multiple times and cause a
+        // crash.
+        if (!self.result) {
+          return;
+        }
+        if (videoURL != nil || hasVideoTrack || [mediaType isEqualToString:@"public.movie"]) {
+          if (@available(iOS 13.0, *)) {
               
-              @try {
-                  
-                  if(self.result != nil){
-                                   
-                                   self.result([FlutterError errorWithCode:@"flutter_image_picker_copy_video_error"
-                                                                              message:@"Could not cache the video file."
-                                                                              details:nil]);
-                                              self.result = nil;
-                               }
-                  
-              } @catch (NSException *exception) {
-                  
+              if(videoURL == nil)return;
+              
+            NSString *fileName = [videoURL lastPathComponent];
+            NSURL *destination =
+                [NSURL fileURLWithPath:[NSTemporaryDirectory() stringByAppendingPathComponent:fileName]];
+
+            if ([[NSFileManager defaultManager] isReadableFileAtPath:[videoURL path]]) {
+              NSError *error;
+              if (![[videoURL path] isEqualToString:[destination path]]) {
+                [[NSFileManager defaultManager] copyItemAtURL:videoURL toURL:destination error:&error];
+
+                if (error) {
+                    
+                    @try {
+                        
+                        if(self.result != nil){
+                                         
+                                         self.result([FlutterError errorWithCode:@"flutter_image_picker_copy_video_error"
+                                                                                    message:@"Could not cache the video file."
+                                                                                    details:nil]);
+                                                    self.result = nil;
+                                     }
+                        
+                    } @catch (NSException *exception) {
+                        
+                    }
+                   
+                 
+                  return;
+                }
               }
-             
-           
-            return;
+              videoURL = destination;
+            }
+          }
+          self.result(videoURL.path);
+          self.result = nil;
+
+        } else {
+          UIImage *image = [info objectForKey:UIImagePickerControllerEditedImage];
+          if (image == nil) {
+            image = [info objectForKey:UIImagePickerControllerOriginalImage];
+          }
+
+          NSNumber *maxWidth = [_arguments objectForKey:@"maxWidth"];
+          NSNumber *maxHeight = [_arguments objectForKey:@"maxHeight"];
+          NSNumber *imageQuality = [_arguments objectForKey:@"imageQuality"];
+
+          if (![imageQuality isKindOfClass:[NSNumber class]]) {
+            imageQuality = @1;
+          } else if (imageQuality.intValue < 0 || imageQuality.intValue > 100) {
+            imageQuality = [NSNumber numberWithInt:1];
+          } else {
+            imageQuality = @([imageQuality floatValue] / 100);
+          }
+
+          if (maxWidth != (id)[NSNull null] || maxHeight != (id)[NSNull null]) {
+            image = [FLTImagePickerImageUtil scaledImage:image maxWidth:maxWidth maxHeight:maxHeight];
+          }
+
+          PHAsset *originalAsset = [FLTImagePickerPhotoAssetUtil getAssetFromImagePickerInfo:info];
+          if (!originalAsset) {
+            // Image picked without an original asset (e.g. User took a photo directly)
+            [self saveImageWithPickerInfo:info image:image imageQuality:imageQuality];
+          } else {
+            __weak typeof(self) weakSelf = self;
+            [[PHImageManager defaultManager]
+                requestImageDataForAsset:originalAsset
+                                 options:nil
+                           resultHandler:^(NSData *_Nullable imageData, NSString *_Nullable dataUTI,
+                                           UIImageOrientation orientation, NSDictionary *_Nullable info) {
+                             // maxWidth and maxHeight are used only for GIF images.
+                              
+                                    @try {
+                                        
+                                        [weakSelf saveImageWithOriginalImageData:imageData
+                                                                                                image:image
+                                                                                             maxWidth:maxWidth
+                                                                                            maxHeight:maxHeight
+                                                                                         imageQuality:imageQuality];
+                                        
+                                    } @catch (NSException *exception) {
+                                        
+                                    } @finally {
+                                        
+                                    }
+                           
+                           }];
           }
         }
-        videoURL = destination;
-      }
+        _arguments = nil;
+        
+    } @catch (NSException *exception) {
+        
+    } @finally {
+        
     }
-    self.result(videoURL.path);
-    self.result = nil;
-
-  } else {
-    UIImage *image = [info objectForKey:UIImagePickerControllerEditedImage];
-    if (image == nil) {
-      image = [info objectForKey:UIImagePickerControllerOriginalImage];
-    }
-
-    NSNumber *maxWidth = [_arguments objectForKey:@"maxWidth"];
-    NSNumber *maxHeight = [_arguments objectForKey:@"maxHeight"];
-    NSNumber *imageQuality = [_arguments objectForKey:@"imageQuality"];
-
-    if (![imageQuality isKindOfClass:[NSNumber class]]) {
-      imageQuality = @1;
-    } else if (imageQuality.intValue < 0 || imageQuality.intValue > 100) {
-      imageQuality = [NSNumber numberWithInt:1];
-    } else {
-      imageQuality = @([imageQuality floatValue] / 100);
-    }
-
-    if (maxWidth != (id)[NSNull null] || maxHeight != (id)[NSNull null]) {
-      image = [FLTImagePickerImageUtil scaledImage:image maxWidth:maxWidth maxHeight:maxHeight];
-    }
-
-    PHAsset *originalAsset = [FLTImagePickerPhotoAssetUtil getAssetFromImagePickerInfo:info];
-    if (!originalAsset) {
-      // Image picked without an original asset (e.g. User took a photo directly)
-      [self saveImageWithPickerInfo:info image:image imageQuality:imageQuality];
-    } else {
-      __weak typeof(self) weakSelf = self;
-      [[PHImageManager defaultManager]
-          requestImageDataForAsset:originalAsset
-                           options:nil
-                     resultHandler:^(NSData *_Nullable imageData, NSString *_Nullable dataUTI,
-                                     UIImageOrientation orientation, NSDictionary *_Nullable info) {
-                       // maxWidth and maxHeight are used only for GIF images.
-                       [weakSelf saveImageWithOriginalImageData:imageData
-                                                          image:image
-                                                       maxWidth:maxWidth
-                                                      maxHeight:maxHeight
-                                                   imageQuality:imageQuality];
-                     }];
-    }
-  }
-  _arguments = nil;
+  
 }
 
 - (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker {

@@ -50,15 +50,23 @@ const FLTImagePickerMIMEType kFLTImagePickerMIMETypeDefault = FLTImagePickerMIME
 }
 
 + (NSData *)updateMetaData:(NSDictionary *)metaData toImage:(NSData *)imageData {
-  NSMutableData *mutableData = [NSMutableData data];
-  CGImageSourceRef cgImage = CGImageSourceCreateWithData((__bridge CFDataRef)imageData, NULL);
-  CGImageDestinationRef destination = CGImageDestinationCreateWithData(
-      (__bridge CFMutableDataRef)mutableData, CGImageSourceGetType(cgImage), 1, nil);
-  CGImageDestinationAddImageFromSource(destination, cgImage, 0, (__bridge CFDictionaryRef)metaData);
-  CGImageDestinationFinalize(destination);
-  CFRelease(cgImage);
-  CFRelease(destination);
-  return mutableData;
+    
+    @try {
+        
+        NSMutableData *mutableData = [NSMutableData data];
+         CGImageSourceRef cgImage = CGImageSourceCreateWithData((__bridge CFDataRef)imageData, NULL);
+         CGImageDestinationRef destination = CGImageDestinationCreateWithData(
+             (__bridge CFMutableDataRef)mutableData, CGImageSourceGetType(cgImage), 1, nil);
+         CGImageDestinationAddImageFromSource(destination, cgImage, 0, (__bridge CFDictionaryRef)metaData);
+         CGImageDestinationFinalize(destination);
+         CFRelease(cgImage);
+         CFRelease(destination);
+         return mutableData;
+        
+    } @catch (NSException *exception) {
+        
+    }
+    return nil;
 }
 
 + (NSData *)convertImage:(UIImage *)image
